@@ -147,35 +147,6 @@ livenessProbe:
   port: 8080
 """
 
-_ARGO_APP = """apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: {service_name}
-  namespace: argocd
-spec:
-  project: default
-  sources:
-    - repoURL: {repo_url}
-      targetRevision: main
-      path: helm/service-chart
-      helm:
-        valueFiles:
-          - $values/generated/{service_name}/helm/values.yaml
-    - repoURL: {repo_url}
-      targetRevision: main
-      path: generated/{service_name}/helm
-      ref: values
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: {namespace}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-"""
-
 _CI_JAVA = """name: {service_name} CI
 
 on:
@@ -264,7 +235,6 @@ def generate_service(
     team: str,
     language: str,
     namespace: str,
-    repo_url: str = "https://github.com/chku3401/idp-platform-demo",
 ) -> dict:
     """Generate a full service scaffold. Returns a summary dict.
 
@@ -290,10 +260,6 @@ def generate_service(
     helm_dir.mkdir(parents=True, exist_ok=True)
     (helm_dir / "values.yaml").write_text(_HELM_VALUES.format(**fmt))
 
-    gitops_dir = base / "gitops"
-    gitops_dir.mkdir(parents=True, exist_ok=True)
-    (gitops_dir / "application.yaml").write_text(_ARGO_APP.format(repo_url=repo_url, **fmt))
-
     WORKFLOWS_DIR.mkdir(parents=True, exist_ok=True)
     ci_template = _CI_JAVA if language == "java" else _CI_NODE
     (WORKFLOWS_DIR / f"{service_name}.yaml").write_text(ci_template.format(**fmt))
@@ -309,7 +275,6 @@ def generate_service(
             "Dockerfile",
             "catalog-info.yaml",
             "helm/values.yaml",
-            "gitops/application.yaml",
             f".github/workflows/{service_name}.yaml",
         ],
     }

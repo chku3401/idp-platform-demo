@@ -36,7 +36,6 @@ def test_generate_node_service(cleanup):
     assert (base / "index.js").exists()
     assert "test-node-svc" in (base / "package.json").read_text()
     assert (base / "helm" / "values.yaml").exists()
-    assert (base / "gitops" / "application.yaml").exists()
     assert (REPO_ROOT / ".github" / "workflows" / "test-node-svc.yaml").exists()
     assert result["language"] == "node"
 
