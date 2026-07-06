@@ -122,7 +122,7 @@ _HELM_VALUES = """service:
   namespace: {namespace}
 
 image:
-  repository: {service_name}
+  repository: ghcr.io/chku3401/{service_name}
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -157,6 +157,10 @@ on:
     branches: [ main ]
     paths: [ 'generated/{service_name}/**' ]
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build-test-scan:
     runs-on: ubuntu-latest
@@ -179,14 +183,38 @@ jobs:
         run: mvn -B -DskipTests package
 
       - name: Build container image
-        run: docker build -t {service_name}:${{{{ github.sha }}}} .
+        run: docker build -t ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}} .
 
       - name: Scan container image
         uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: {service_name}:${{{{ github.sha }}}}
+          image-ref: ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
           severity: CRITICAL,HIGH
           exit-code: '0'
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{{{ github.actor }}}}
+          password: ${{{{ secrets.GITHUB_TOKEN }}}}
+
+      - name: Push image
+        if: github.event_name == 'push'
+        run: docker push ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
+
+      - name: Bump Helm values to the new image tag
+        if: github.event_name == 'push'
+        run: |
+          sed -i "s/tag: .*/tag: ${{{{ github.sha }}}}/" helm/values.yaml
+          if ! git diff --quiet helm/values.yaml; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add helm/values.yaml
+            git commit -m "chore: bump {service_name} image to ${{{{ github.sha }}}} [skip ci]"
+            git push
+          fi
 """
 
 _CI_NODE = """name: {service_name} CI
@@ -198,6 +226,10 @@ on:
   pull_request:
     branches: [ main ]
     paths: [ 'generated/{service_name}/**' ]
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   build-test-scan:
@@ -219,14 +251,38 @@ jobs:
         run: npm test
 
       - name: Build container image
-        run: docker build -t {service_name}:${{{{ github.sha }}}} .
+        run: docker build -t ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}} .
 
       - name: Scan container image
         uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: {service_name}:${{{{ github.sha }}}}
+          image-ref: ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
           severity: CRITICAL,HIGH
           exit-code: '0'
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{{{ github.actor }}}}
+          password: ${{{{ secrets.GITHUB_TOKEN }}}}
+
+      - name: Push image
+        if: github.event_name == 'push'
+        run: docker push ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
+
+      - name: Bump Helm values to the new image tag
+        if: github.event_name == 'push'
+        run: |
+          sed -i "s/tag: .*/tag: ${{{{ github.sha }}}}/" helm/values.yaml
+          if ! git diff --quiet helm/values.yaml; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add helm/values.yaml
+            git commit -m "chore: bump {service_name} image to ${{{{ github.sha }}}} [skip ci]"
+            git push
+          fi
 """
 
 
