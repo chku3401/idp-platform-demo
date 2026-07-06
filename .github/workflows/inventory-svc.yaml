@@ -1,0 +1,38 @@
+name: inventory-svc CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'generated/inventory-svc/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'generated/inventory-svc/**' ]
+
+jobs:
+  build-test-scan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: generated/inventory-svc
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build container image
+        run: docker build -t inventory-svc:${{ github.sha }} .
+
+      - name: Scan container image
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: inventory-svc:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: '0'
