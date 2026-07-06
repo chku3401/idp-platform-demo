@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notification-svc
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/chku3401/idp-platform-demo
+      targetRevision: main
+      path: helm/service-chart
+      helm:
+        valueFiles:
+          - $values/generated/notification-svc/helm/values.yaml
+    - repoURL: https://github.com/chku3401/idp-platform-demo
+      targetRevision: main
+      path: generated/notification-svc/helm
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: notifications-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

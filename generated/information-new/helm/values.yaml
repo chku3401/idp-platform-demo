@@ -1,0 +1,29 @@
+service:
+  name: information-new
+  team: info
+  namespace: info-dev
+
+image:
+  repository: information-new
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+containerPort: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+readinessProbe:
+  path: /health
+  port: 8080
+
+livenessProbe:
+  path: /health
+  port: 8080

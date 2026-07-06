@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payment-api
+  description: payment-api owned by payments
+spec:
+  type: service
+  lifecycle: experimental
+  owner: payments

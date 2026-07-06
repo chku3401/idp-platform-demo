@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: information-new
+  description: information-new owned by info
+spec:
+  type: service
+  lifecycle: experimental
+  owner: info
