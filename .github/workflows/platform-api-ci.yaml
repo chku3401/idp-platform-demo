@@ -1,0 +1,50 @@
+name: platform-api CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'idp_platform/**'
+      - 'platform-api/**'
+      - 'scripts/**'
+      - 'templates/**'
+      - 'tests/**'
+      - 'helm/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'idp_platform/**'
+      - 'platform-api/**'
+      - 'scripts/**'
+      - 'templates/**'
+      - 'tests/**'
+      - 'helm/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r platform-api/requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+
+      - name: Lint chart
+        run: helm lint helm/service-chart
+
+      - name: Render chart
+        run: helm template test-release helm/service-chart

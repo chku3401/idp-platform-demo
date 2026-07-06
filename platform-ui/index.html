@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>IDP Platform &mdash; Create Service</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Create New Service</h1>
+    <p class="subtitle">Self-service microservice onboarding</p>
+
+    <form id="create-form">
+      <label>
+        Service Name
+        <input type="text" name="service_name" placeholder="payment-api" required
+               pattern="[a-z][a-z0-9-]{1,38}[a-z0-9]" title="lowercase letters, numbers, hyphens" />
+      </label>
+
+      <label>
+        Team
+        <input type="text" name="team" placeholder="payments" required />
+      </label>
+
+      <label>
+        Language
+        <select name="language" required>
+          <option value="java">Java (Spring Boot)</option>
+          <option value="node">Node.js</option>
+        </select>
+      </label>
+
+      <label>
+        Namespace
+        <input type="text" name="namespace" placeholder="payments-dev" required />
+      </label>
+
+      <fieldset>
+        <legend>Dependencies</legend>
+        <label class="checkbox"><input type="checkbox" name="database" /> Database required?</label>
+        <label class="checkbox"><input type="checkbox" name="kafka" /> Kafka required?</label>
+        <label class="checkbox"><input type="checkbox" name="redis" /> Redis required?</label>
+      </fieldset>
+
+      <button type="submit">Create Service</button>
+    </form>
+
+    <div id="result" class="result hidden"></div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
