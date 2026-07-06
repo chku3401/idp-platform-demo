@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -12,7 +13,11 @@ from idp_platform.generator import (
     ServiceExistsError,
     ServiceGenerationError,
     generate_service,
+    list_services,
 )
+from idp_platform.git_ops import GitAutomationError, commit_and_push
+
+GIT_AUTOMATION_ENABLED = os.environ.get("IDP_GIT_AUTOMATION") == "1"
 
 app = FastAPI(title="IDP Platform API")
 
@@ -32,6 +37,11 @@ def health():
     return {"status": "healthy"}
 
 
+@app.get("/services")
+def get_services():
+    return {"services": list_services()}
+
+
 @app.post("/services", status_code=201)
 def create_service(request: ServiceRequest):
     try:
@@ -46,8 +56,21 @@ def create_service(request: ServiceRequest):
     except ServiceExistsError as exc:
         raise HTTPException(status_code=409, detail=str(exc))
 
+    git_result = {"committed": False, "pushed": False, "reason": "automation disabled"}
+    if GIT_AUTOMATION_ENABLED:
+        workflow_path = f".github/workflows/{request.service_name}.yaml"
+        try:
+            git_result = commit_and_push(
+                REPO_ROOT,
+                paths=[result["path"], workflow_path],
+                message=f"Onboard service: {request.service_name} (team: {request.team})",
+            )
+        except GitAutomationError as exc:
+            git_result = {"committed": False, "pushed": False, "error": str(exc)}
+
     return {
         "message": "Service onboarding request accepted",
+        "git": git_result,
         **result,
     }
 

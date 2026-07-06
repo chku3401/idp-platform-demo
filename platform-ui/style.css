@@ -7,6 +7,8 @@
   --accent: #2f6fed;
   --error: #c0392b;
   --success: #1e824c;
+  --muted: #888888;
+  --chip-bg: #eef2fc;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -15,6 +17,7 @@
     --bg: #121212;
     --card: #1c1c1c;
     --border: #333333;
+    --chip-bg: #1e2a44;
   }
 }
 
@@ -32,11 +35,39 @@ body {
 
 main {
   width: 100%;
-  max-width: 480px;
+  max-width: 560px;
 }
 
 h1 { margin-bottom: 0.25rem; }
-.subtitle { margin-top: 0; color: #888; }
+h2 { font-size: 1rem; margin: 0 0 0.4rem; }
+.subtitle { margin-top: 0; color: var(--muted); }
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.95rem;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
 
 form {
   background: var(--card);
@@ -62,6 +93,17 @@ input[type="text"], select {
   background: transparent;
   color: var(--fg);
   font-size: 1rem;
+  transition: border-color 0.15s ease;
+}
+
+input.invalid {
+  border-color: var(--error);
+}
+
+.field-error {
+  font-size: 0.78rem;
+  color: var(--error);
+  min-height: 1em;
 }
 
 fieldset {
@@ -85,9 +127,57 @@ button {
   color: white;
   font-size: 1rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
 }
 
 button:disabled { opacity: 0.6; cursor: default; }
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner.hidden { display: none; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.preview {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+}
+
+.preview-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+#preview-tree {
+  margin: 0;
+  font-size: 0.82rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre;
+  overflow-x: auto;
+}
 
 .result {
   margin-top: 1.25rem;
@@ -97,8 +187,87 @@ button:disabled { opacity: 0.6; cursor: default; }
   font-size: 0.9rem;
   white-space: pre-wrap;
   word-break: break-word;
+  animation: fade-in 0.2s ease;
 }
 
 .result.hidden { display: none; }
 .result.success { border-color: var(--success); }
 .result.error { border-color: var(--error); color: var(--error); }
+
+.catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.catalog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.catalog-empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 1rem 0;
+}
+
+.service-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  animation: fade-in 0.2s ease;
+}
+
+.service-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.service-name {
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.chip {
+  font-size: 0.75rem;
+  background: var(--chip-bg);
+  color: var(--accent);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.service-meta {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  display: flex;
+  gap: 1rem;
+}
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--success);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.error { border-left-color: var(--error); }
+.toast.hidden { opacity: 0; transform: translateX(-50%) translateY(8px); pointer-events: none; }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

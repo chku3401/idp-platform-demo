@@ -2,6 +2,8 @@ import re
 import shutil
 from pathlib import Path
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = REPO_ROOT / "templates"
 GENERATED_DIR = REPO_ROOT / "generated"
@@ -311,3 +313,26 @@ def generate_service(
             f".github/workflows/{service_name}.yaml",
         ],
     }
+
+
+def list_services() -> list[dict]:
+    if not GENERATED_DIR.exists():
+        return []
+
+    services = []
+    for base in sorted(GENERATED_DIR.iterdir()):
+        catalog_file = base / "catalog-info.yaml"
+        values_file = base / "helm" / "values.yaml"
+        if not base.is_dir() or not catalog_file.exists() or not values_file.exists():
+            continue
+
+        catalog = yaml.safe_load(catalog_file.read_text())
+        values = yaml.safe_load(values_file.read_text())
+        services.append({
+            "service_name": base.name,
+            "team": catalog["spec"]["owner"],
+            "namespace": values["service"]["namespace"],
+            "language": "java" if (base / "pom.xml").exists() else "node",
+            "path": str(base.relative_to(REPO_ROOT)),
+        })
+    return services

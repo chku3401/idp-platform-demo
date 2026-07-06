@@ -12,6 +12,7 @@ from idp_platform.generator import (
     ServiceExistsError,
     ServiceGenerationError,
     generate_service,
+    list_services,
 )
 
 
@@ -66,3 +67,15 @@ def test_rejects_duplicate_service(cleanup):
     generate_service("test-dup-svc", "payments", "node", "payments-dev")
     with pytest.raises(ServiceExistsError):
         generate_service("test-dup-svc", "payments", "node", "payments-dev")
+
+
+def test_list_services_reports_generated_service(cleanup):
+    cleanup.append("test-list-svc")
+    generate_service("test-list-svc", "billing", "java", "billing-dev")
+
+    entries = {s["service_name"]: s for s in list_services()}
+    assert "test-list-svc" in entries
+    entry = entries["test-list-svc"]
+    assert entry["team"] == "billing"
+    assert entry["namespace"] == "billing-dev"
+    assert entry["language"] == "java"

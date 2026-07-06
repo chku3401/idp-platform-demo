@@ -92,6 +92,17 @@ curl -X POST localhost:8000/services -H 'Content-Type: application/json' \
   -d '{"service_name":"notification-svc","team":"notifications","language":"node","namespace":"notifications-dev"}'
 ```
 
+By default, generated files just land on disk. Set `IDP_GIT_AUTOMATION=1` to have
+`POST /services` also `git add`/`commit`/`push` the new service straight to `origin`,
+so the real GitHub Actions workflow and ArgoCD Application it creates actually fire:
+
+```bash
+IDP_GIT_AUTOMATION=1 .venv/bin/uvicorn app:app --app-dir platform-api/src --port 8000
+```
+
+This is off by default so the test suite (and casual local generation) never pushes
+to your remote by accident.
+
 ### Run the tests
 
 ```bash

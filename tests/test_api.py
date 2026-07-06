@@ -73,3 +73,20 @@ def test_create_service_conflict(cleanup):
     assert first.status_code == 201
     second = client.post("/services", json=payload)
     assert second.status_code == 409
+
+
+def test_list_services_includes_created_service(cleanup):
+    cleanup.append("test-api-catalog")
+    client.post(
+        "/services",
+        json={
+            "service_name": "test-api-catalog",
+            "team": "orders",
+            "language": "java",
+            "namespace": "orders-dev",
+        },
+    )
+    resp = client.get("/services")
+    assert resp.status_code == 200
+    names = [s["service_name"] for s in resp.json()["services"]]
+    assert "test-api-catalog" in names

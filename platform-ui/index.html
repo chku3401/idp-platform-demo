@@ -8,46 +8,74 @@
 </head>
 <body>
   <main>
-    <h1>Create New Service</h1>
+    <h1>IDP Platform</h1>
     <p class="subtitle">Self-service microservice onboarding</p>
 
-    <form id="create-form">
-      <label>
-        Service Name
-        <input type="text" name="service_name" placeholder="payment-api" required
-               pattern="[a-z][a-z0-9-]{1,38}[a-z0-9]" title="lowercase letters, numbers, hyphens" />
-      </label>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="create" role="tab" aria-selected="true">Create Service</button>
+      <button class="tab" data-tab="catalog" role="tab" aria-selected="false">Service Catalog</button>
+    </nav>
 
-      <label>
-        Team
-        <input type="text" name="team" placeholder="payments" required />
-      </label>
+    <section id="tab-create" class="tab-panel active">
+      <form id="create-form" novalidate>
+        <label>
+          Service Name
+          <input type="text" name="service_name" placeholder="payment-api" required />
+          <span class="field-error" data-for="service_name"></span>
+        </label>
 
-      <label>
-        Language
-        <select name="language" required>
-          <option value="java">Java (Spring Boot)</option>
-          <option value="node">Node.js</option>
-        </select>
-      </label>
+        <label>
+          Team
+          <input type="text" name="team" placeholder="payments" required />
+          <span class="field-error" data-for="team"></span>
+        </label>
 
-      <label>
-        Namespace
-        <input type="text" name="namespace" placeholder="payments-dev" required />
-      </label>
+        <label>
+          Language
+          <select name="language" required>
+            <option value="java">Java (Spring Boot)</option>
+            <option value="node">Node.js</option>
+          </select>
+        </label>
 
-      <fieldset>
-        <legend>Dependencies</legend>
-        <label class="checkbox"><input type="checkbox" name="database" /> Database required?</label>
-        <label class="checkbox"><input type="checkbox" name="kafka" /> Kafka required?</label>
-        <label class="checkbox"><input type="checkbox" name="redis" /> Redis required?</label>
-      </fieldset>
+        <label>
+          Namespace
+          <input type="text" name="namespace" placeholder="payments-dev" required />
+          <span class="field-error" data-for="namespace"></span>
+        </label>
 
-      <button type="submit">Create Service</button>
-    </form>
+        <fieldset>
+          <legend>Dependencies</legend>
+          <label class="checkbox"><input type="checkbox" name="database" /> Database required?</label>
+          <label class="checkbox"><input type="checkbox" name="kafka" /> Kafka required?</label>
+          <label class="checkbox"><input type="checkbox" name="redis" /> Redis required?</label>
+        </fieldset>
 
-    <div id="result" class="result hidden"></div>
+        <button type="submit">
+          <span class="btn-label">Create Service</span>
+          <span class="spinner hidden"></span>
+        </button>
+      </form>
+
+      <div id="preview" class="preview">
+        <h2>Preview</h2>
+        <p class="preview-hint">This is what will be generated once you submit:</p>
+        <pre id="preview-tree"></pre>
+      </div>
+
+      <div id="result" class="result hidden"></div>
+    </section>
+
+    <section id="tab-catalog" class="tab-panel">
+      <div class="catalog-header">
+        <p class="preview-hint">Services onboarded through this platform.</p>
+        <button id="refresh-catalog" class="secondary">Refresh</button>
+      </div>
+      <div id="catalog-list" class="catalog-list"></div>
+    </section>
   </main>
+
+  <div id="toast" class="toast hidden"></div>
 
   <script src="app.js"></script>
 </body>
