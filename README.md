@@ -1,6 +1,6 @@
 # Internal Developer Platform Demo
 
-A free, portfolio-ready IDP project for onboarding microservices across multiple teams.
+An IDP project for onboarding microservices across multiple teams.
 
 ## Use Case
 
@@ -15,18 +15,6 @@ The organization has:
 - ArgoCD-style GitOps deployment
 
 The goal is to allow any developer to onboard a new service using a standard template.
-
-## What This Project Demonstrates
-
-- Developer self-service onboarding
-- Standard microservice templates
-- Namespace automation model
-- Golden CI/CD pipeline
-- Helm-based deployment
-- GitOps application registration
-- Team ownership model
-- Service catalog metadata
-- Policy and governance examples
 
 ## Architecture
 
@@ -58,7 +46,7 @@ gitops/                GitOps manifests for namespaces and apps
 templates/             Real, buildable Java (Spring Boot) and Node service templates
 tests/                 pytest suite for the generator and API
 ci/                    Golden pipeline stage reference (see .github/workflows for the real thing)
-docs/                  Architecture and interview explanation
+docs/                  Architecture notes
 scripts/               CLI wrapper around idp_platform.generator
 ```
 
@@ -140,8 +128,4 @@ The catalog tab's service cards are clickable — the detail view polls
 `GET /services/<name>/status` every 5s for live replica counts, pod status, CPU/memory
 (via `metrics-server`), and ArgoCD sync/health, straight from the cluster. Set
 `IDP_KUBE_CONTEXT` if your kubeconfig's current context isn't `kind-idp-demo`.
-
-## Interview Story
-
-This project shows how I would build an IDP for a company with many engineering teams. Instead of every developer manually creating repositories, pipelines, Helm charts, Kubernetes manifests, RBAC, dashboards, and ArgoCD apps, the platform gives them a self-service onboarding flow.
 
