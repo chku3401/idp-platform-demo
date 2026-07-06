@@ -16,6 +16,7 @@ from idp_platform.generator import (
     list_services,
 )
 from idp_platform.git_ops import GitAutomationError, commit_and_push
+from idp_platform.k8s_status import get_service_status
 
 GIT_AUTOMATION_ENABLED = os.environ.get("IDP_GIT_AUTOMATION") == "1"
 
@@ -40,6 +41,14 @@ def health():
 @app.get("/services")
 def get_services():
     return {"services": list_services()}
+
+
+@app.get("/services/{service_name}/status")
+def service_status(service_name: str):
+    services = {s["service_name"]: s for s in list_services()}
+    if service_name not in services:
+        raise HTTPException(status_code=404, detail=f"Unknown service '{service_name}'")
+    return get_service_status(service_name, services[service_name]["namespace"])
 
 
 @app.post("/services", status_code=201)

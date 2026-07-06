@@ -59,7 +59,6 @@ function updatePreview() {
     "  README.md",
     ...sourceFiles.map((f) => `  ${f}`),
     "  helm/values.yaml",
-    "  gitops/application.yaml",
     `.github/workflows/${name}.yaml`,
   ];
   previewTree.textContent = lines.join("\n");
@@ -165,7 +164,7 @@ function renderCatalog(services) {
   catalogList.innerHTML = services
     .map(
       (svc) => `
-        <div class="service-card">
+        <div class="service-card" data-service="${svc.service_name}" tabindex="0" role="button">
           <div class="service-card-header">
             <span class="service-name">${svc.service_name}</span>
             <span class="chip">${svc.language}</span>
@@ -177,6 +176,17 @@ function renderCatalog(services) {
         </div>`
     )
     .join("");
+
+  catalogList.querySelectorAll(".service-card").forEach((card) => {
+    const open = () => showDetail(card.dataset.service);
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
 }
 
 async function loadCatalog() {
@@ -190,22 +200,114 @@ async function loadCatalog() {
   }
 }
 
+const detailContent = document.getElementById("detail-content");
+let detailPollTimer = null;
+
+function activatePanel(name) {
+  clearInterval(detailPollTimer);
+  document.querySelectorAll(".tab").forEach((t) => {
+    t.classList.toggle("active", t.dataset.tab === name);
+    t.setAttribute("aria-selected", String(t.dataset.tab === name));
+  });
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${name}`));
+}
+
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((t) => {
-      t.classList.remove("active");
-      t.setAttribute("aria-selected", "false");
-    });
-    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-
-    tab.classList.add("active");
-    tab.setAttribute("aria-selected", "true");
-    document.getElementById(`tab-${tab.dataset.tab}`).classList.add("active");
-
+    activatePanel(tab.dataset.tab);
     if (tab.dataset.tab === "catalog") loadCatalog();
   });
 });
 
 document.getElementById("refresh-catalog").addEventListener("click", loadCatalog);
+document.getElementById("back-to-catalog").addEventListener("click", () => activatePanel("catalog"));
+
+function statusChip(label, kind) {
+  const cls = kind === "good" ? "chip chip-good" : kind === "bad" ? "chip chip-bad" : "chip";
+  return `<span class="${cls}">${label}</span>`;
+}
+
+function renderDetail(status) {
+  if (!status.cluster_reachable) {
+    detailContent.innerHTML = `
+      <h2>${status.service}</h2>
+      <p class="catalog-empty">Cluster unreachable: ${status.error || "unknown error"}</p>`;
+    return;
+  }
+
+  const argocd = status.argocd || {};
+  const syncChip = statusChip(argocd.sync_status || "Unknown", argocd.sync_status === "Synced" ? "good" : "bad");
+  const healthChip = statusChip(argocd.health_status || "Unknown", argocd.health_status === "Healthy" ? "good" : "bad");
+
+  const podRows = (status.pods || [])
+    .map(
+      (p) => `
+        <tr>
+          <td>${p.name}</td>
+          <td>${p.phase}</td>
+          <td>${p.ready}</td>
+          <td>${p.restarts}</td>
+        </tr>`
+    )
+    .join("");
+
+  const metricsByPod = Object.fromEntries((status.metrics || []).map((m) => [m.pod, m]));
+  const metricsRows = (status.pods || [])
+    .map((p) => {
+      const m = metricsByPod[p.name];
+      return `<tr><td>${p.name}</td><td>${m ? m.cpu : "—"}</td><td>${m ? m.memory : "—"}</td></tr>`;
+    })
+    .join("");
+
+  const r = status.replicas || {};
+
+  detailContent.innerHTML = `
+    <div class="detail-header">
+      <h2>${status.service}</h2>
+      <div>${syncChip} ${healthChip}</div>
+    </div>
+    <p class="preview-hint">namespace: ${status.namespace}</p>
+
+    <div class="stat-row">
+      <div class="stat"><span class="stat-value">${r.desired ?? "—"}</span><span class="stat-label">desired</span></div>
+      <div class="stat"><span class="stat-value">${r.ready ?? "—"}</span><span class="stat-label">ready</span></div>
+      <div class="stat"><span class="stat-value">${r.available ?? "—"}</span><span class="stat-label">available</span></div>
+    </div>
+
+    <h3>Pods</h3>
+    <table class="status-table">
+      <thead><tr><th>Name</th><th>Phase</th><th>Ready</th><th>Restarts</th></tr></thead>
+      <tbody>${podRows || '<tr><td colspan="4">No pods found</td></tr>'}</tbody>
+    </table>
+
+    <h3>Resource usage</h3>
+    ${
+      status.metrics === null
+        ? '<p class="preview-hint">metrics-server unavailable</p>'
+        : `<table class="status-table">
+            <thead><tr><th>Pod</th><th>CPU</th><th>Memory</th></tr></thead>
+            <tbody>${metricsRows}</tbody>
+          </table>`
+    }
+  `;
+}
+
+async function fetchAndRenderDetail(serviceName) {
+  try {
+    const response = await fetch(`/services/${serviceName}/status`);
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.detail || "Failed to load status");
+    renderDetail(body);
+  } catch (err) {
+    detailContent.innerHTML = `<p class="catalog-empty">Failed to load status: ${err.message}</p>`;
+  }
+}
+
+function showDetail(serviceName) {
+  activatePanel("detail");
+  detailContent.innerHTML = '<p class="catalog-empty">Loading...</p>';
+  fetchAndRenderDetail(serviceName);
+  detailPollTimer = setInterval(() => fetchAndRenderDetail(serviceName), 5000);
+}
 
 updatePreview();

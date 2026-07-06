@@ -122,11 +122,24 @@ curl localhost:8080/health
 ```bash
 kind create cluster --name idp-demo
 kubectl apply -n argocd --server-side -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl apply -f generated/payment-api/gitops/application.yaml
+kubectl apply -f gitops/apps/generated-services-appset.yaml
 ```
 
-ArgoCD pulls `helm/service-chart` + `generated/<service>/helm/values.yaml` from this
-repo's `main` branch and syncs it into the service's namespace automatically.
+That last command is a one-time setup step, not a per-service one. The
+`generated-services` ApplicationSet watches `generated/*/helm/values.yaml` in this
+repo and auto-creates (and later auto-prunes) an ArgoCD `Application` per service —
+pushing a new service is enough for it to be registered and synced, no manual
+`kubectl apply` per service.
+
+Each Application renders `helm/service-chart` with that service's values and syncs
+it into the service's namespace automatically.
+
+### View how a service is performing
+
+The catalog tab's service cards are clickable — the detail view polls
+`GET /services/<name>/status` every 5s for live replica counts, pod status, CPU/memory
+(via `metrics-server`), and ArgoCD sync/health, straight from the cluster. Set
+`IDP_KUBE_CONTEXT` if your kubeconfig's current context isn't `kind-idp-demo`.
 
 ## Interview Story
 
