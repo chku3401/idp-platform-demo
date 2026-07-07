@@ -5,7 +5,7 @@ service:
 
 image:
   repository: ghcr.io/chku3401/information-new
-  tag: latest
+  tag: ff4a742f0a71dd472dd4cc24614993e622627363
   pullPolicy: IfNotPresent
 
 replicaCount: 2
