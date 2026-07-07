@@ -15,6 +15,7 @@ from idp_platform.generator import (
     generate_service,
     list_services,
 )
+from idp_platform.ci_status import get_ci_status
 from idp_platform.git_ops import GitAutomationError, commit_and_push
 from idp_platform.k8s_status import get_service_status
 
@@ -48,7 +49,9 @@ def service_status(service_name: str):
     services = {s["service_name"]: s for s in list_services()}
     if service_name not in services:
         raise HTTPException(status_code=404, detail=f"Unknown service '{service_name}'")
-    return get_service_status(service_name, services[service_name]["namespace"])
+    status = get_service_status(service_name, services[service_name]["namespace"])
+    status["ci"] = get_ci_status(service_name)
+    return status
 
 
 @app.post("/services", status_code=201)

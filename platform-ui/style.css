@@ -291,6 +291,8 @@ button:disabled { opacity: 0.6; cursor: default; }
 .chip-good { background: rgba(30, 130, 76, 0.15); color: var(--success); }
 .chip-bad { background: rgba(192, 57, 43, 0.15); color: var(--error); }
 
+.ci-link { text-decoration: none; }
+
 .stat-row {
   display: flex;
   gap: 0.75rem;

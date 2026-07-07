@@ -239,6 +239,19 @@ function renderDetail(status) {
   const syncChip = statusChip(argocd.sync_status || "Unknown", argocd.sync_status === "Synced" ? "good" : "bad");
   const healthChip = statusChip(argocd.health_status || "Unknown", argocd.health_status === "Healthy" ? "good" : "bad");
 
+  const ci = status.ci || {};
+  let ciChip;
+  if (!ci.available) {
+    ciChip = statusChip("CI: no runs yet", null);
+  } else if (ci.status !== "completed") {
+    ciChip = statusChip(`CI: ${ci.status}`, null);
+  } else {
+    ciChip = statusChip(`CI: ${ci.conclusion}`, ci.conclusion === "success" ? "good" : "bad");
+  }
+  const ciLink = ci.html_url
+    ? `<a href="${ci.html_url}" target="_blank" rel="noopener" class="ci-link">${ciChip}</a>`
+    : ciChip;
+
   const podRows = (status.pods || [])
     .map(
       (p) => `
@@ -264,7 +277,7 @@ function renderDetail(status) {
   detailContent.innerHTML = `
     <div class="detail-header">
       <h2>${status.service}</h2>
-      <div>${syncChip} ${healthChip}</div>
+      <div>${ciLink} ${syncChip} ${healthChip}</div>
     </div>
     <p class="preview-hint">namespace: ${status.namespace}</p>
 
