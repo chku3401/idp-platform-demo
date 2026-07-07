@@ -13,3 +13,5 @@ docker build -t memo-api:local generated/memo-api
 docker run -p 8080:8080 memo-api:local
 curl localhost:8080/health
 ```
+
+Retriggered after enabling read/write workflow permissions.
