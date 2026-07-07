@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: memo-api
+  description: memo-api owned by memo
+spec:
+  type: service
+  lifecycle: experimental
+  owner: memo
