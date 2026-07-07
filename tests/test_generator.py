@@ -51,9 +51,24 @@ def test_generate_java_service(cleanup):
     assert result["language"] == "java"
 
 
+def test_generate_python_service(cleanup):
+    cleanup.append("test-python-svc")
+    result = generate_service("test-python-svc", "search", "python", "search-dev")
+
+    base = GENERATED_DIR / "test-python-svc"
+    assert (base / "Dockerfile").exists()
+    assert (base / "requirements.txt").exists()
+    assert (base / "main.py").exists()
+    assert "test-python-svc" in (base / "main.py").read_text()
+    assert (base / "tests" / "test_health.py").exists()
+    assert (base / "helm" / "values.yaml").exists()
+    assert (REPO_ROOT / ".github" / "workflows" / "test-python-svc.yaml").exists()
+    assert result["language"] == "python"
+
+
 def test_rejects_bad_language(cleanup):
     with pytest.raises(ServiceGenerationError):
-        generate_service("test-bad-lang", "payments", "python", "payments-dev")
+        generate_service("test-bad-lang", "payments", "ruby", "payments-dev")
 
 
 def test_rejects_bad_service_name(cleanup):

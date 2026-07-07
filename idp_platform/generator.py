@@ -9,16 +9,17 @@ TEMPLATES_DIR = REPO_ROOT / "templates"
 GENERATED_DIR = REPO_ROOT / "generated"
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
-VALID_LANGUAGES = {"java", "node"}
+VALID_LANGUAGES = {"java", "node", "python"}
 NAME_PATTERN = re.compile(r"^[a-z][a-z0-9-]{1,38}[a-z0-9]$")
 
 _LANGUAGE_DIRS = {
     "java": "java-springboot",
     "node": "node-service",
+    "python": "python-service",
 }
 
 _PLACEHOLDER_FILE_SUFFIXES = {
-    ".json", ".js", ".xml", ".java", ".properties", ".md",
+    ".json", ".js", ".xml", ".java", ".properties", ".md", ".py",
 }
 
 
@@ -86,6 +87,15 @@ RUN npm install --omit=dev
 COPY . .
 EXPOSE 8080
 CMD ["npm", "start"]
+"""
+
+_DOCKERFILE_PYTHON = """FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8080
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
 """
 
 _CATALOG_INFO = """apiVersion: backstage.io/v1alpha1
@@ -295,6 +305,91 @@ jobs:
           fi
 """
 
+_CI_PYTHON = """name: {service_name} CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'generated/{service_name}/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'generated/{service_name}/**' ]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-test-scan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: generated/{service_name}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Unit tests
+        run: pytest tests/ -v
+
+      - name: Build container image
+        run: docker build -t ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}} .
+
+      - name: Scan container image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{{{ github.actor }}}}
+          password: ${{{{ secrets.GITHUB_TOKEN }}}}
+
+      - name: Push image
+        if: github.event_name == 'push'
+        run: docker push ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
+
+      - name: Bump Helm values to the new image tag
+        if: github.event_name == 'push'
+        run: |
+          sed -i "s/tag: .*/tag: ${{{{ github.sha }}}}/" helm/values.yaml
+          if ! git diff --quiet helm/values.yaml; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add helm/values.yaml
+            git commit -m "chore: bump {service_name} image to ${{{{ github.sha }}}} [skip ci]"
+            for i in 1 2 3 4 5; do
+              git push && break
+              git fetch origin main
+              git rebase origin/main
+              sleep $(( (RANDOM % 5) + 1 ))
+            done
+          fi
+"""
+
+_DOCKERFILES = {
+    "java": _DOCKERFILE_JAVA,
+    "node": _DOCKERFILE_NODE,
+    "python": _DOCKERFILE_PYTHON,
+}
+
+_CI_TEMPLATES = {
+    "java": _CI_JAVA,
+    "node": _CI_NODE,
+    "python": _CI_PYTHON,
+}
+
 
 def generate_service(
     service_name: str,
@@ -317,8 +412,7 @@ def generate_service(
 
     _copy_source_template(service_name, team, language, base)
 
-    dockerfile = _DOCKERFILE_JAVA if language == "java" else _DOCKERFILE_NODE
-    (base / "Dockerfile").write_text(dockerfile)
+    (base / "Dockerfile").write_text(_DOCKERFILES[language])
     (base / "catalog-info.yaml").write_text(_CATALOG_INFO.format(**fmt))
     (base / "README.md").write_text(_SERVICE_README.format(**fmt))
 
@@ -327,8 +421,7 @@ def generate_service(
     (helm_dir / "values.yaml").write_text(_HELM_VALUES.format(**fmt))
 
     WORKFLOWS_DIR.mkdir(parents=True, exist_ok=True)
-    ci_template = _CI_JAVA if language == "java" else _CI_NODE
-    (WORKFLOWS_DIR / f"{service_name}.yaml").write_text(ci_template.format(**fmt))
+    (WORKFLOWS_DIR / f"{service_name}.yaml").write_text(_CI_TEMPLATES[language].format(**fmt))
 
     return {
         "service": service_name,
@@ -359,11 +452,17 @@ def list_services() -> list[dict]:
 
         catalog = yaml.safe_load(catalog_file.read_text())
         values = yaml.safe_load(values_file.read_text())
+        if (base / "pom.xml").exists():
+            language = "java"
+        elif (base / "requirements.txt").exists():
+            language = "python"
+        else:
+            language = "node"
         services.append({
             "service_name": base.name,
             "team": catalog["spec"]["owner"],
             "namespace": values["service"]["namespace"],
-            "language": "java" if (base / "pom.xml").exists() else "node",
+            "language": language,
             "path": str(base.relative_to(REPO_ROOT)),
         })
     return services

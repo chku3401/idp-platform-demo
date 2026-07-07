@@ -43,7 +43,7 @@ platform-api/          FastAPI self-service onboarding API (serves the UI too)
 platform-ui/           Static form UI, served at platform-api's "/"
 helm/service-chart/    Reusable Helm chart for services
 gitops/                GitOps manifests for namespaces and apps
-templates/             Real, buildable Java (Spring Boot) and Node service templates
+templates/             Real, buildable Java (Spring Boot), Node, and Python (FastAPI) service templates
 tests/                 pytest suite for the generator and API
 ci/                    Golden pipeline stage reference (see .github/workflows for the real thing)
 docs/                  Architecture notes

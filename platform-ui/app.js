@@ -19,6 +19,7 @@ const FIELD_RULES = {
 const SOURCE_FILES = {
   java: ["pom.xml", "src/main/java/com/example/service/Application.java", "src/main/resources/application.properties"],
   node: ["package.json", "index.js", "test/health.test.js"],
+  python: ["requirements.txt", "main.py", "tests/test_health.py"],
 };
 
 const GRAFANA_URL = "http://localhost:3000";
