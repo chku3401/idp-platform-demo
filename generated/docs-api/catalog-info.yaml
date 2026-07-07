@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: docs-api
+  description: docs-api owned by document
+spec:
+  type: service
+  lifecycle: experimental
+  owner: document
