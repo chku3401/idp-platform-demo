@@ -14,3 +14,4 @@ docker run -p 8080:8080 notification-svc:local
 curl localhost:8080/health
 ```
 Retriggered after fixing trivy-action version pin.
+Retriggered with the corrected CI pipeline (GHCR push + tag bump).
