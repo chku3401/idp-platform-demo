@@ -186,7 +186,7 @@ jobs:
         run: docker build -t ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}} .
 
       - name: Scan container image
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
           severity: CRITICAL,HIGH
@@ -254,7 +254,7 @@ jobs:
         run: docker build -t ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}} .
 
       - name: Scan container image
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/chku3401/{service_name}:${{{{ github.sha }}}}
           severity: CRITICAL,HIGH
