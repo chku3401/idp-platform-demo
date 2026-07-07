@@ -4,7 +4,7 @@ service:
   namespace: inventory-dev
 
 image:
-  repository: inventory-svc
+  repository: ghcr.io/chku3401/inventory-svc
   tag: latest
   pullPolicy: IfNotPresent
 

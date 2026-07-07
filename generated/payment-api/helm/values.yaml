@@ -4,7 +4,7 @@ service:
   namespace: payments-dev
 
 image:
-  repository: payment-api
+  repository: ghcr.io/chku3401/payment-api
   tag: latest
   pullPolicy: IfNotPresent
 

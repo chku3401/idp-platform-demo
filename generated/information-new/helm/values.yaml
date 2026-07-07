@@ -4,7 +4,7 @@ service:
   namespace: info-dev
 
 image:
-  repository: information-new
+  repository: ghcr.io/chku3401/information-new
   tag: latest
   pullPolicy: IfNotPresent
 
