@@ -17,3 +17,4 @@ curl localhost:8080/health
 ```
 
 Retriggered after enabling read/write workflow permissions.
+Retriggered after fixing Actions permissions to allow all actions.
