@@ -15,3 +15,4 @@ curl localhost:8080/health
 ```
 
 Retriggered after enabling read/write workflow permissions.
+Retriggered after fixing trivy-action version pin.

@@ -13,3 +13,4 @@ docker build -t notification-svc:local generated/notification-svc
 docker run -p 8080:8080 notification-svc:local
 curl localhost:8080/health
 ```
+Retriggered after fixing trivy-action version pin.

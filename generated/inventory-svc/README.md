@@ -13,3 +13,4 @@ docker build -t inventory-svc:local generated/inventory-svc
 docker run -p 8080:8080 inventory-svc:local
 curl localhost:8080/health
 ```
+Retriggered after fixing trivy-action version pin.
