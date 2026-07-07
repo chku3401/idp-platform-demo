@@ -21,6 +21,18 @@ const SOURCE_FILES = {
   node: ["package.json", "index.js", "test/health.test.js"],
 };
 
+const GRAFANA_URL = "http://localhost:3000";
+const GRAFANA_LOKI_UID = "P8E80F9AEF21F6940";
+
+function grafanaLogsUrl(namespace) {
+  const left = {
+    datasource: GRAFANA_LOKI_UID,
+    queries: [{ expr: `{namespace="${namespace}"}`, refId: "A" }],
+    range: { from: "now-1h", to: "now" },
+  };
+  return `${GRAFANA_URL}/explore?orgId=1&left=${encodeURIComponent(JSON.stringify(left))}`;
+}
+
 const form = document.getElementById("create-form");
 const result = document.getElementById("result");
 const previewTree = document.getElementById("preview-tree");
@@ -279,7 +291,10 @@ function renderDetail(status) {
       <h2>${status.service}</h2>
       <div>${ciLink} ${syncChip} ${healthChip}</div>
     </div>
-    <p class="preview-hint">namespace: ${status.namespace}</p>
+    <p class="preview-hint">
+      namespace: ${status.namespace} &middot;
+      <a href="${grafanaLogsUrl(status.namespace)}" target="_blank" rel="noopener">View logs in Grafana</a>
+    </p>
 
     <div class="stat-row">
       <div class="stat"><span class="stat-value">${r.desired ?? "—"}</span><span class="stat-label">desired</span></div>

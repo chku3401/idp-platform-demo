@@ -126,6 +126,35 @@ it into the service's namespace automatically.
 
 The catalog tab's service cards are clickable — the detail view polls
 `GET /services/<name>/status` every 5s for live replica counts, pod status, CPU/memory
-(via `metrics-server`), and ArgoCD sync/health, straight from the cluster. Set
-`IDP_KUBE_CONTEXT` if your kubeconfig's current context isn't `kind-idp-demo`.
+(via `metrics-server`), ArgoCD sync/health, and the latest GitHub Actions CI run,
+straight from the cluster and GitHub. Set `IDP_KUBE_CONTEXT` if your kubeconfig's
+current context isn't `kind-idp-demo`.
+
+### Metrics and logs (Prometheus, Grafana, Loki)
+
+```bash
+kubectl apply -f gitops/apps/kube-prometheus-stack.yaml
+kubectl apply -f gitops/apps/loki-stack.yaml
+```
+
+Same pattern as the ArgoCD bootstrap above — these are ArgoCD Applications pointing
+at the upstream `prometheus-community` and `grafana` Helm repos, so once applied
+ArgoCD installs and manages them. Gives you real historical CPU/memory per pod
+(Prometheus, via `kube-state-metrics` + node-exporter) and aggregated logs across
+every generated service (Loki + Promtail), both queryable from one Grafana instance:
+
+```bash
+kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80
+# admin / (see gitops/apps/kube-prometheus-stack.yaml's grafana.adminPassword)
+```
+
+The service detail page links directly to a Grafana Explore query scoped to that
+service's namespace.
+
+Note: `kube-prometheus-stack`'s CRDs are large enough to hit Kubernetes'
+last-applied-configuration annotation size limit under a plain `kubectl apply` —
+if `kubectl get prometheus -n monitoring` comes back empty after installing, apply
+the chart's CRDs directly with `--server-side` first (see the ArgoCD CRD install
+step above for the same fix), then restart `kube-prometheus-stack-operator` so it
+picks them up.
 
