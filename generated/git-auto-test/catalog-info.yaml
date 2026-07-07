@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: git-auto-test
+  description: git-auto-test owned by platform
+spec:
+  type: service
+  lifecycle: experimental
+  owner: platform
