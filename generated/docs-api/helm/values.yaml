@@ -5,7 +5,7 @@ service:
 
 image:
   repository: ghcr.io/chku3401/docs-api
-  tag: latest
+  tag: a0e6abe57bb82a3e79c78e0a569edbe9fa7995c7
   pullPolicy: IfNotPresent
 
 replicaCount: 2
