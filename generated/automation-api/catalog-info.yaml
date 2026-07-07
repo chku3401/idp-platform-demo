@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: automation-api
+  description: automation-api owned by auto
+spec:
+  type: service
+  lifecycle: experimental
+  owner: auto
