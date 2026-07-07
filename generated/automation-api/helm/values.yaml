@@ -5,7 +5,7 @@ service:
 
 image:
   repository: ghcr.io/chku3401/automation-api
-  tag: latest
+  tag: 38b78b5cc95d6f4b372def3f258374708825b68b
   pullPolicy: IfNotPresent
 
 replicaCount: 2
